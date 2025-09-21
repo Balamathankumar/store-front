@@ -18,7 +18,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   className = '',
   style = {},
   onClick,
-  fallbackToEmoji = true
+  fallbackToEmoji = true,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -26,20 +26,18 @@ const ProductImage: React.FC<ProductImageProps> = ({
   const [productImages, setProductImages] = useState<string[]>([]);
 
   useEffect(() => {
-    // Reset states when product or imageIndex changes
     setImageLoaded(false);
     setImageError(false);
-    
+
     const loadImages = async () => {
       try {
-        // If product has imageFilenames, use uploads path
         if (product.imageFilenames && product.imageFilenames.length > 0) {
-          const filename = product.imageFilenames[imageIndex] || product.imageFilenames[0];
+          const filename =
+            product.imageFilenames[imageIndex] || product.imageFilenames[0];
           setImageUrl(getProductImageUrl(product.id, imageIndex, filename));
           return;
         }
 
-        // If product has imageUrl, use it directly
         if (product.imageUrl) {
           setImageUrl(product.imageUrl);
           return;
@@ -48,21 +46,21 @@ const ProductImage: React.FC<ProductImageProps> = ({
         // Try to fetch images from API
         const images = await ApiService.getProductImages(product.id);
         setProductImages(images);
-        
+
         if (images.length > imageIndex) {
           setImageUrl(images[imageIndex]);
         } else {
-          // Use the API endpoint pattern as fallback
+          // Use API endpoint pattern as fallback
           setImageUrl(getProductImageUrl(product.id, imageIndex));
         }
       } catch (error) {
-        // Use the API endpoint pattern as fallback
+        // Use API endpoint pattern as fallback
         setImageUrl(getProductImageUrl(product.id, imageIndex));
       }
     };
 
     loadImages();
-  }, [product.id, product.imageUrl, product.imageFilenames, imageIndex]);
+  }, [product, imageIndex]);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -78,11 +76,10 @@ const ProductImage: React.FC<ProductImageProps> = ({
     return product.emoji || getCategoryEmoji(product.category);
   };
 
-  // Show emoji fallback if image failed to load or while loading
   const showEmoji = (!imageLoaded || imageError) && fallbackToEmoji;
-
+  const BASE_URL = 'https://api.srisainutsandspices.com';
   return (
-    <div 
+    <div
       className={`product-image-container ${className}`}
       style={style}
       onClick={onClick}
@@ -90,7 +87,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
       {/* Actual image */}
       {imageUrl && !imageError && (
         <img
-          src={imageUrl}
+          src={`${BASE_URL}${imageUrl}`}
           alt={product.name}
           onLoad={handleImageLoad}
           onError={handleImageError}
@@ -99,11 +96,11 @@ const ProductImage: React.FC<ProductImageProps> = ({
             height: '100%',
             objectFit: 'cover',
             display: imageLoaded ? 'block' : 'none',
-            borderRadius: 'inherit'
+            borderRadius: 'inherit',
           }}
         />
       )}
-      
+
       {/* Emoji fallback */}
       {showEmoji && (
         <div
@@ -115,13 +112,13 @@ const ProductImage: React.FC<ProductImageProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: style.fontSize || '48px',
-            borderRadius: 'inherit'
+            borderRadius: 'inherit',
           }}
         >
           {getFallbackEmoji()}
         </div>
       )}
-      
+
       {/* Loading state */}
       {!imageLoaded && !imageError && imageUrl && (
         <div
@@ -135,10 +132,10 @@ const ProductImage: React.FC<ProductImageProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             background: 'linear-gradient(45deg, #F3E8DE, #EBD9C8)',
-            borderRadius: 'inherit'
+            borderRadius: 'inherit',
           }}
         >
-          <div className="loading"></div>
+          <div className='loading'></div>
         </div>
       )}
     </div>
