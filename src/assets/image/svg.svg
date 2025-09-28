@@ -1,0 +1,33 @@
+<svg width="100%" height="100%" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  
+  <circle cx="250" cy="220" r="140" fill="none" stroke="#D1A756" stroke-width="8"/>
+
+  <path d="M 150 250 C 170 290, 330 290, 350 250 L 340 240 C 325 280, 175 280, 160 240 Z" fill="#E6BF8C" stroke="#A87F55" stroke-width="4"/>
+  <path d="M 160 240 C 175 270, 325 270, 340 240" fill="none" stroke="#A87F55" stroke-width="3"/>
+  <path d="M 170 230 C 180 250, 320 250, 330 230" fill="none" stroke="#A87F55" stroke-width="2"/>
+
+  <path d="M 200 210 C 190 200, 190 190, 200 180 C 210 170, 220 170, 230 180 C 240 190, 240 200, 230 210 Z" fill="#C79F6F" stroke="#A87F55" stroke-width="1.5"/>
+  <path d="M 230 220 C 220 210, 220 200, 230 190 C 240 180, 250 180, 260 190 L 265 200 L 260 210 Z" fill="#E6BF8C" stroke="#A87F55" stroke-width="1.5"/>
+  <circle cx="270" cy="205" r="10" fill="#90EE90" stroke="#228B22" stroke-width="1.5"/>
+  <path d="M 270 195 L 275 190 L 280 195 L 275 200 Z" fill="#6B8E23" stroke="#228B22" stroke-width="1"/>
+  <path d="M 180 230 C 170 220, 170 210, 180 200 C 190 190, 200 190, 210 200 C 220 210, 220 220, 210 230 Z" fill="#DC143C" stroke="#8B0000" stroke-width="1.5"/>
+  <rect x="300" y="220" width="30" height="8" rx="4" fill="#8B4513" stroke="#5C3317" stroke-width="1.5"/>
+  <circle cx="280" cy="225" r="5" fill="#800000" stroke="#5C3317" stroke-width="1"/>
+  <circle cx="290" cy="230" r="5" fill="#800000" stroke="#5C3317" stroke-width="1"/>
+  <circle cx="295" cy="220" r="5" fill="#800000" stroke="#5C3317" stroke-width="1"/>
+    
+  <g fill="#8B4513" transform="translate(140, 55) scale(0.12)">
+    <path d="M80 500h-30v-450h-50v-50h210v50h-50v450h-30v-220h-50v220zm40-300v-100h50v100h-50z"/>
+    <path d="M300 500h-50v-450h-50v-50h210v50h-50v450h-30v-220h-50v220zm40-300v-100h50v100h-50z" transform="translate(120, 0)"/>
+    </g>
+
+  <path id="nuts-spices-path" fill="#2E8B57" d="M230 350a120 120 0 1 1 40 0zm-20-40l-30 80h10l20-50h20l-10 50h10l-20-80z"/>
+  <text x="250" y="380" font-family="Verdana, sans-serif" font-size="28" fill="#2E8B57" text-anchor="middle">
+      NUTS &amp; SPICES
+  </text>
+  
+
+  <text x="250" y="450" font-family="Verdana, sans-serif" font-size="25" fill="#2E8B57" font-weight="bold" text-anchor="middle">
+    Wholesale &amp; Retail
+  </text>
+</svg>
