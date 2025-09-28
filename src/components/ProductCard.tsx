@@ -44,7 +44,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  // Generate emoji based on category if not provided
   const getProductEmoji = (product: Product): string => {
     if (product.emoji) return product.emoji;
 

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { CartItem, Product, WeightOption } from '../types';
 import ApiService from '../services/api';
 
@@ -10,20 +16,48 @@ interface CartState {
 }
 
 interface CartContextType extends CartState {
-  addToCart: (product: Product, weight: WeightOption, quantity?: number) => void;
+  addToCart: (
+    product: Product,
+    weight: WeightOption,
+    quantity?: number
+  ) => void;
   removeFromCart: (productId: number, weight: WeightOption) => void;
-  updateQuantity: (productId: number, weight: WeightOption, quantity: number) => void;
-  changeWeight: (productId: number, oldWeight: WeightOption, newWeight: WeightOption) => void;
+  updateQuantity: (
+    productId: number,
+    weight: WeightOption,
+    quantity: number
+  ) => void;
+  changeWeight: (
+    productId: number,
+    oldWeight: WeightOption,
+    newWeight: WeightOption
+  ) => void;
   clearCart: () => void;
   toggleCart: () => void;
   getItemPrice: (product: Product, weight: WeightOption) => number;
 }
 
 type CartAction =
-  | { type: 'ADD_TO_CART'; payload: { product: Product; weight: WeightOption; quantity: number } }
-  | { type: 'REMOVE_FROM_CART'; payload: { productId: number; weight: WeightOption } }
-  | { type: 'UPDATE_QUANTITY'; payload: { productId: number; weight: WeightOption; quantity: number } }
-  | { type: 'CHANGE_WEIGHT'; payload: { productId: number; oldWeight: WeightOption; newWeight: WeightOption } }
+  | {
+      type: 'ADD_TO_CART';
+      payload: { product: Product; weight: WeightOption; quantity: number };
+    }
+  | {
+      type: 'REMOVE_FROM_CART';
+      payload: { productId: number; weight: WeightOption };
+    }
+  | {
+      type: 'UPDATE_QUANTITY';
+      payload: { productId: number; weight: WeightOption; quantity: number };
+    }
+  | {
+      type: 'CHANGE_WEIGHT';
+      payload: {
+        productId: number;
+        oldWeight: WeightOption;
+        newWeight: WeightOption;
+      };
+    }
   | { type: 'CLEAR_CART' }
   | { type: 'TOGGLE_CART' }
   | { type: 'LOAD_CART'; payload: CartItem[] };
@@ -31,12 +65,10 @@ type CartAction =
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const getItemPrice = (product: Product, weight: WeightOption): number => {
-  // Handle combo products - they have fixed prices regardless of weight
   if (product.isCombo) {
     return product.price || product.retailPrice;
   }
 
-  // First check if the product has the new prices dictionary
   if (product.prices && typeof product.prices === 'object') {
     const priceFromDict = product.prices[weight.toString()];
     if (priceFromDict !== undefined) {
@@ -44,7 +76,6 @@ const getItemPrice = (product: Product, weight: WeightOption): number => {
     }
   }
 
-  // Fallback to legacy price fields or calculations
   switch (weight) {
     case 50:
       return product.price50g || Math.round(product.retailPrice * 0.5);
@@ -61,16 +92,18 @@ const getItemPrice = (product: Product, weight: WeightOption): number => {
   }
 };
 
-const calculateTotals = (items: CartItem[]): { totalItems: number; totalAmount: number } => {
+const calculateTotals = (
+  items: CartItem[]
+): { totalItems: number; totalAmount: number } => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = items.reduce((sum, item) => {
     if (item.product) {
       const price = getItemPrice(item.product, item.weight as WeightOption);
-      return sum + (price * item.quantity);
+      return sum + price * item.quantity;
     }
     return sum;
   }, 0);
-  
+
   return { totalItems, totalAmount };
 };
 
@@ -79,7 +112,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'ADD_TO_CART': {
       const { product, weight, quantity } = action.payload;
       const existingItemIndex = state.items.findIndex(
-        item => item.id === product.id && item.weight === weight
+        (item) => item.id === product.id && item.weight === weight
       );
 
       let newItems: CartItem[];
@@ -87,12 +120,15 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         newItems = [...state.items];
         newItems[existingItemIndex].quantity += quantity;
       } else {
-        newItems = [...state.items, {
-          id: product.id,
-          quantity,
-          weight,
-          product
-        }];
+        newItems = [
+          ...state.items,
+          {
+            id: product.id,
+            quantity,
+            weight,
+            product,
+          },
+        ];
       }
 
       const { totalItems, totalAmount } = calculateTotals(newItems);
@@ -100,10 +136,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: newItems,
         totalItems,
-        totalAmount
+        totalAmount,
       };
 
-      // Save to localStorage
       ApiService.saveCart(newItems);
       return newState;
     }
@@ -111,7 +146,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'REMOVE_FROM_CART': {
       const { productId, weight } = action.payload;
       const newItems = state.items.filter(
-        item => !(item.id === productId && item.weight === weight)
+        (item) => !(item.id === productId && item.weight === weight)
       );
 
       const { totalItems, totalAmount } = calculateTotals(newItems);
@@ -119,7 +154,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: newItems,
         totalItems,
-        totalAmount
+        totalAmount,
       };
 
       ApiService.saveCart(newItems);
@@ -128,19 +163,21 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
     case 'UPDATE_QUANTITY': {
       const { productId, weight, quantity } = action.payload;
-      const newItems = state.items.map(item => {
-        if (item.id === productId && item.weight === weight) {
-          return { ...item, quantity: Math.max(0, quantity) };
-        }
-        return item;
-      }).filter(item => item.quantity > 0);
+      const newItems = state.items
+        .map((item) => {
+          if (item.id === productId && item.weight === weight) {
+            return { ...item, quantity: Math.max(0, quantity) };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0);
 
       const { totalItems, totalAmount } = calculateTotals(newItems);
       const newState = {
         ...state,
         items: newItems,
         totalItems,
-        totalAmount
+        totalAmount,
       };
 
       ApiService.saveCart(newItems);
@@ -149,34 +186,36 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
     case 'CHANGE_WEIGHT': {
       const { productId, oldWeight, newWeight } = action.payload;
-      
-      // Check if there's already an item with the new weight
       const existingItemWithNewWeight = state.items.find(
-        item => item.id === productId && item.weight === newWeight
+        (item) => item.id === productId && item.weight === newWeight
       );
-      
+
       let newItems: CartItem[];
-      
+
       if (existingItemWithNewWeight) {
-        // If an item with the new weight already exists, merge quantities
         const itemToChange = state.items.find(
-          item => item.id === productId && item.weight === oldWeight
+          (item) => item.id === productId && item.weight === oldWeight
         );
-        
+
         if (itemToChange) {
-          newItems = state.items.map(item => {
-            if (item.id === productId && item.weight === newWeight) {
-              // Add the quantity from the old weight item
-              return { ...item, quantity: item.quantity + itemToChange.quantity };
-            }
-            return item;
-          }).filter(item => !(item.id === productId && item.weight === oldWeight));
+          newItems = state.items
+            .map((item) => {
+              if (item.id === productId && item.weight === newWeight) {
+                return {
+                  ...item,
+                  quantity: item.quantity + itemToChange.quantity,
+                };
+              }
+              return item;
+            })
+            .filter(
+              (item) => !(item.id === productId && item.weight === oldWeight)
+            );
         } else {
           newItems = state.items;
         }
       } else {
-        // Simply change the weight of the existing item
-        newItems = state.items.map(item => {
+        newItems = state.items.map((item) => {
           if (item.id === productId && item.weight === oldWeight) {
             return { ...item, weight: newWeight };
           }
@@ -189,7 +228,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: newItems,
         totalItems,
-        totalAmount
+        totalAmount,
       };
 
       ApiService.saveCart(newItems);
@@ -202,13 +241,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: [],
         totalItems: 0,
-        totalAmount: 0
+        totalAmount: 0,
       };
 
     case 'TOGGLE_CART':
       return {
         ...state,
-        isOpen: !state.isOpen
+        isOpen: !state.isOpen,
       };
 
     case 'LOAD_CART': {
@@ -218,7 +257,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items,
         totalItems,
-        totalAmount
+        totalAmount,
       };
     }
 
@@ -231,13 +270,14 @@ const initialState: CartState = {
   items: [],
   isOpen: false,
   totalItems: 0,
-  totalAmount: 0
+  totalAmount: 0,
 };
 
-export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const CartProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
-  // Load cart from localStorage on initialization
   useEffect(() => {
     const savedCart = ApiService.getCartFromStorage();
     if (savedCart.length > 0) {
@@ -245,7 +285,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const addToCart = (product: Product, weight: WeightOption, quantity: number = 1) => {
+  const addToCart = (
+    product: Product,
+    weight: WeightOption,
+    quantity: number = 1
+  ) => {
     dispatch({ type: 'ADD_TO_CART', payload: { product, weight, quantity } });
   };
 
@@ -253,12 +297,26 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'REMOVE_FROM_CART', payload: { productId, weight } });
   };
 
-  const updateQuantity = (productId: number, weight: WeightOption, quantity: number) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, weight, quantity } });
+  const updateQuantity = (
+    productId: number,
+    weight: WeightOption,
+    quantity: number
+  ) => {
+    dispatch({
+      type: 'UPDATE_QUANTITY',
+      payload: { productId, weight, quantity },
+    });
   };
 
-  const changeWeight = (productId: number, oldWeight: WeightOption, newWeight: WeightOption) => {
-    dispatch({ type: 'CHANGE_WEIGHT', payload: { productId, oldWeight, newWeight } });
+  const changeWeight = (
+    productId: number,
+    oldWeight: WeightOption,
+    newWeight: WeightOption
+  ) => {
+    dispatch({
+      type: 'CHANGE_WEIGHT',
+      payload: { productId, oldWeight, newWeight },
+    });
   };
 
   const clearCart = () => {
@@ -277,14 +335,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     changeWeight,
     clearCart,
     toggleCart,
-    getItemPrice
+    getItemPrice,
   };
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
 export const useCart = (): CartContextType => {
