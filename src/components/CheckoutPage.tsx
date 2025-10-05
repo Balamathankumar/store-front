@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Customer, WeightOption } from '../types';
+import { CartItem, Customer, WeightOption } from '../types';
 import ApiService from '../services/api';
 import HeaderTitle from './header/header-title/header-title';
 import Breadcrumb from './Breadcrumb';
+import { AuthService } from '../services/auth.service';
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as
+    | { customerData?: Customer; cartItems?: CartItem[] }
+    | undefined;
+  console.log('Location state in CheckoutPage:', state);
+  const customers = AuthService.getCustomer();
   const {
     items,
     totalAmount,
@@ -17,16 +24,28 @@ const CheckoutPage: React.FC = () => {
     removeFromCart,
     changeWeight,
   } = useCart();
+
   const [customer, setCustomer] = useState<Customer>({
-    name: '',
-    email: '',
-    phone: '',
+    name: state?.customerData?.name || customers?.name || '',
+    email: state?.customerData?.email || customers?.email || '',
+    phone: state?.customerData?.phone || customers?.phone || '',
     address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'India',
+      street:
+        state?.customerData?.address?.street ||
+        customers?.address?.street ||
+        '',
+      city:
+        state?.customerData?.address?.city || customers?.address?.city || '',
+      state:
+        state?.customerData?.address?.state || customers?.address?.state || '',
+      zipCode:
+        state?.customerData?.address?.zipCode ||
+        customers?.address?.zipCode ||
+        '',
+      country:
+        state?.customerData?.address?.country ||
+        customers?.address?.country ||
+        'India',
     },
   });
   const [isProcessing, setIsProcessing] = useState(false);
@@ -68,7 +87,7 @@ const CheckoutPage: React.FC = () => {
     setIsProcessing(true);
     try {
       const orderData = {
-        customerId: customer.id || 1, // Use customer ID or default
+        customerId: customer.id || 1,
         items: items.map((item) => ({
           itemId: item.id,
           quantity: item.quantity,

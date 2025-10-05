@@ -1,15 +1,36 @@
 import axios from 'axios';
-import { Product, SearchResponse, FeaturedResponse, Customer, ItemsResponse, HealthResponse } from '../types';
+import {
+  Product,
+  SearchResponse,
+  FeaturedResponse,
+  Customer,
+  ItemsResponse,
+  HealthResponse,
+} from '../types';
 import { sampleProducts } from '../data/sampleData';
+import { AuthService } from './auth.service';
+import Cookies from 'js-cookie';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api/storefront';
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api/storefront';
+
+export interface SendVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface VerifyCodeResponse {
+  success: boolean;
+  token?: string; // backend may return JWT/session token
+  message: string;
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: false, // Disable credentials for CORS simplicity
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
   timeout: 5000, // 5 second timeout
 });
@@ -30,7 +51,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.code === 'ERR_NETWORK' || error.message.includes('CORS')) {
-      console.warn('CORS or network error detected, falling back to sample data');
+      console.warn(
+        'CORS or network error detected, falling back to sample data'
+      );
       // This will be caught by the try-catch blocks in the API methods
     }
     return Promise.reject(error);
@@ -52,9 +75,43 @@ export class ApiService {
         stats: {
           items: sampleProducts.length,
           orders: 0,
-          customers: 0
-        }
+          customers: 0,
+        },
       };
+    }
+  }
+
+  static async sendVerification(
+    email: string,
+    name: string
+  ): Promise<SendVerificationResponse> {
+    try {
+      const response = await api.post('/auth/send-verification', {
+        email,
+        name,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('SendVerification error:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to send verification'
+      );
+    }
+  }
+
+  static async verifyCode(
+    email: string,
+    code: string
+  ): Promise<VerifyCodeResponse> {
+    try {
+      const response = await api.post('/auth/verify-code', {
+        email,
+        code,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('VerifyCode error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to verify OTP');
     }
   }
 
@@ -75,44 +132,47 @@ export class ApiService {
     } catch (error) {
       console.warn('API unavailable, using sample data');
       let products = sampleProducts;
-      
+
       if (params?.category) {
-        products = products.filter(p => p.category === params.category);
+        products = products.filter((p) => p.category === params.category);
       }
-      
+
       if (params?.featured) {
-        products = products.filter(p => p.badge === 'BESTSELLER' || p.badge === 'HOT');
-      }
-      
-      if (params?.search) {
-        const query = params.search.toLowerCase();
-        products = products.filter(p => 
-          p.name.toLowerCase().includes(query) ||
-          (p.description && p.description.toLowerCase().includes(query)) ||
-          p.category.toLowerCase().includes(query)
+        products = products.filter(
+          (p) => p.badge === 'BESTSELLER' || p.badge === 'HOT'
         );
       }
-      
+
+      if (params?.search) {
+        const query = params.search.toLowerCase();
+        products = products.filter(
+          (p) =>
+            p.name.toLowerCase().includes(query) ||
+            (p.description && p.description.toLowerCase().includes(query)) ||
+            p.category.toLowerCase().includes(query)
+        );
+      }
+
       if (params?.limit) {
         products = products.slice(0, params.limit);
       }
-      
+
       return {
         items: products,
         pagination: {
           total: products.length,
           limit: params?.limit || 20,
           offset: params?.offset || 0,
-          hasMore: false
+          hasMore: false,
         },
         filters: {
           categories: {
-            'NUT': ['Almonds', 'Cashews', 'Walnuts'],
-            'SPICE': ['Turmeric', 'Cumin', 'Coriander'],
+            NUT: ['Almonds', 'Cashews', 'Walnuts'],
+            SPICE: ['Turmeric', 'Cumin', 'Coriander'],
             'DRY FRUIT': ['Dates', 'Raisins', 'Figs'],
-            'SEEDS': ['Chia', 'Flax', 'Sunflower']
-          }
-        }
+            SEEDS: ['Chia', 'Flax', 'Sunflower'],
+          },
+        },
       };
     }
   }
@@ -122,7 +182,7 @@ export class ApiService {
       const response = await api.get(`/items/${id}`);
       return response.data;
     } catch (error) {
-      const product = sampleProducts.find(p => p.id === id);
+      const product = sampleProducts.find((p) => p.id === id);
       if (!product) {
         throw new Error('Product not found');
       }
@@ -147,7 +207,9 @@ export class ApiService {
       const response = await api.get(`/combos/${id}`);
       return response.data;
     } catch (error) {
-      const combo = sampleProducts.find(p => p.id === id && p.isCombo === true);
+      const combo = sampleProducts.find(
+        (p) => p.id === id && p.isCombo === true
+      );
       if (!combo) {
         throw new Error('Combo not found');
       }
@@ -166,14 +228,18 @@ export class ApiService {
       return response.data;
     } catch (error) {
       const query = params.q.toLowerCase();
-      let filteredProducts = sampleProducts.filter(product => 
-        product.name.toLowerCase().includes(query) ||
-        (product.description && product.description.toLowerCase().includes(query)) ||
-        product.category.toLowerCase().includes(query)
+      let filteredProducts = sampleProducts.filter(
+        (product) =>
+          product.name.toLowerCase().includes(query) ||
+          (product.description &&
+            product.description.toLowerCase().includes(query)) ||
+          product.category.toLowerCase().includes(query)
       );
 
       if (params.category) {
-        filteredProducts = filteredProducts.filter(p => p.category === params.category);
+        filteredProducts = filteredProducts.filter(
+          (p) => p.category === params.category
+        );
       }
 
       const limit = params.limit || 50;
@@ -186,8 +252,8 @@ export class ApiService {
           total: filteredProducts.length,
           limit,
           offset,
-          hasMore: offset + limit < filteredProducts.length
-        }
+          hasMore: offset + limit < filteredProducts.length,
+        },
       };
     }
   }
@@ -197,12 +263,16 @@ export class ApiService {
       const response = await api.get('/items/featured');
       return response.data;
     } catch (error) {
-      const featured = sampleProducts.filter(p => p.badge === 'BESTSELLER' || p.badge === 'HOT').slice(0, 4);
-      const bestsellers = sampleProducts.filter(p => (p.rating || 0) >= 4.7).slice(0, 4);
-      
+      const featured = sampleProducts
+        .filter((p) => p.badge === 'BESTSELLER' || p.badge === 'HOT')
+        .slice(0, 4);
+      const bestsellers = sampleProducts
+        .filter((p) => (p.rating || 0) >= 4.7)
+        .slice(0, 4);
+
       return {
         featured,
-        bestsellers
+        bestsellers,
       };
     }
   }
@@ -229,7 +299,10 @@ export class ApiService {
       // Fallback to localStorage
       const cartData = localStorage.getItem('spiceVault_cart');
       const items = cartData ? JSON.parse(cartData) : [];
-      const total = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+      const total = items.reduce(
+        (sum: number, item: any) => sum + item.price * item.quantity,
+        0
+      );
       return { items, total };
     }
   }
@@ -286,20 +359,21 @@ export class ApiService {
     } catch (error) {
       // Simulate order creation for demo
       const orderId = `ORD-${Date.now()}-DEMO`;
-      const total = orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const total = orderData.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
 
       return {
         orderId,
         status: 'confirmed',
-        total
+        total,
       };
     }
   }
 
   // Customer Management
-  static async getCustomer(params: {
-    email?: string;
-  }): Promise<Customer> {
+  static async getCustomer(params: { email?: string }): Promise<Customer> {
     try {
       const response = await api.get('/customers', { params });
       return response.data;
@@ -321,15 +395,73 @@ export class ApiService {
       // Simulate customer creation
       return {
         ...customerData,
-        id: Date.now()
+        id: Date.now(),
       } as Customer;
     }
   }
 
+  static async updateCustomer(customer: Customer): Promise<Customer> {
+    try {
+      const accessToken = AuthService.getAccessToken();
+      if (!accessToken) throw new Error('User is not authenticated');
+
+      const response = await api.put('/customers', customer, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('updateCustomer error:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to update customer'
+      );
+    }
+  }
+
+  static async getCustomers(email: string): Promise<Customer[]> {
+    try {
+      const accessToken = AuthService.getAccessToken();
+      if (!accessToken) throw new Error('User is not authenticated');
+
+      const response = await api.get('/customers', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('updateCustomer error:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to update customer'
+      );
+    }
+  }
+
+  // static async updateCustomer(customerData: {
+  //   name: string;
+  //   email: string;
+  //   phone?: string;
+  //   address?: string;
+  // }): Promise<Customer> {
+  //   try {
+  //     const response = await api.put('/customers', customerData);
+  //     return response.data;
+  //   } catch (error) {
+  //     // Simulate customer creation
+  //     return {
+  //       ...customerData,
+  //       id: Date.now(),
+  //     } as Customer;
+  //   }
+  // }
+
   // Order Tracking
-  static async trackOrder(params: {
-    orderId: string;
-  }): Promise<any> {
+  static async trackOrder(params: { orderId: string }): Promise<any> {
     try {
       const response = await api.get('/orders/track', { params });
       return response.data;
@@ -337,7 +469,7 @@ export class ApiService {
       return {
         orderId: params.orderId,
         status: 'not_found',
-        message: 'Order not found'
+        message: 'Order not found',
       };
     }
   }

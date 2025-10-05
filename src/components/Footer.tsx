@@ -120,13 +120,15 @@ const Footer: React.FC = () => {
                     <a href='tel:+918000123456'>+91 7904774212</a>
                   </div>
                 </div>
-                {/* <div className='contact-item'>
+                <div className='contact-item'>
                   <span className='contact-icon'>📧</span>
                   <div>
                     <p>Email Us</p>
-                    <a href='mailto:support@spicex.com'>support@spicex.com</a>
+                    <a href='mailto:support@spicex.com'>
+                      srisainutsandspices@gmail.com
+                    </a>
                   </div>
-                </div> */}
+                </div>
                 <div className='contact-item'>
                   <span className='contact-icon'>📧</span>
                   <div>
