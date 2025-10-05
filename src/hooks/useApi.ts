@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Product, SearchResponse } from '../types';
-import ApiService from '../services/api';
+import { Customer, Product, SearchResponse } from '../types';
+import ApiService, {
+  SendVerificationResponse,
+  VerifyCodeResponse,
+} from '../services/api';
 
-export const useProducts = (category?: 'NUT' | 'DRY FRUIT' | 'SPICE' | 'SEEDS', limit?: number) => {
+export const useProducts = (
+  category?: 'NUT' | 'DRY FRUIT' | 'SPICE' | 'SEEDS',
+  limit?: number
+) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +39,12 @@ export const useProductSearch = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const search = async (query: string, category?: 'NUT' | 'DRY FRUIT' | 'SPICE' | 'SEEDS', limit?: number, offset?: number) => {
+  const search = async (
+    query: string,
+    category?: 'NUT' | 'DRY FRUIT' | 'SPICE' | 'SEEDS',
+    limit?: number,
+    offset?: number
+  ) => {
     if (!query.trim()) {
       setResults(null);
       return;
@@ -41,7 +52,12 @@ export const useProductSearch = () => {
 
     try {
       setLoading(true);
-      const data = await ApiService.searchProducts({ q: query, category, limit, offset });
+      const data = await ApiService.searchProducts({
+        q: query,
+        category,
+        limit,
+        offset,
+      });
       setResults(data);
       setError(null);
     } catch (err) {
@@ -141,4 +157,99 @@ export const useProduct = (id: number) => {
   }, [id]);
 
   return { product, loading, error };
+};
+
+export const useSendVerification = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<SendVerificationResponse | null>(null);
+
+  const sendVerification = async (email: string, name: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await ApiService.sendVerification(email, name);
+      setData(response);
+      return response;
+    } catch (err: any) {
+      setError(err.message || 'Failed to send verification');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { sendVerification, data, loading, error };
+};
+
+export const useVerifyCode = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<VerifyCodeResponse | null>(null);
+
+  const verifyCode = async (email: string, code: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await ApiService.verifyCode(email, code);
+      setData(response);
+      return response;
+    } catch (err: any) {
+      setError(err.message || 'Failed to verify OTP');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { verifyCode, data, loading, error };
+};
+
+export const useUpdateCustomer = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<Customer | null>(null);
+
+  const updateCustomer = async (customer: Customer) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await ApiService.updateCustomer(customer);
+      setData(response);
+      return response;
+    } catch (err: any) {
+      setError(err.message || 'Failed to update customer');
+      throw err;
+      console.error('Error updating customer:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateCustomer, data, loading, error };
+};
+
+export const useGetCustomers = () => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getCustomers = async (email: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await ApiService.getCustomers(email);
+      setCustomers(response);
+      return response;
+    } catch (err: any) {
+      console.error('Error fetching customers:', err);
+      const message = err.message || 'Failed to fetch customers';
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { getCustomers, customers, loading, error };
 };

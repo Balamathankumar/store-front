@@ -19,10 +19,14 @@ import ProductGrid from './components/ProductGrid';
 import ProductDetail from './components/product-detail/index';
 import ComboDetail from './components/combo-detail/components/index';
 import CheckoutPage from './components/CheckoutPage';
+// import CheckoutPage from './components/checkout/CheckoutPage';
 import CartModal from './components/CartModal';
 import BottomNavigation from './components/BottomNavigation';
 import Footer from './components/Footer';
 import PromoBanner from './components/PromoBanner';
+import WhatsAppWidget from './components/whatsapp-widget/whatsapp-widget';
+import LoginPage from './components/login/login';
+import { OtpPage } from './components/login/otp';
 
 type SortOption =
   | 'popular'
@@ -41,6 +45,9 @@ const HomePage: React.FC = () => {
   const [isHeroHidden, setIsHeroHidden] = useState(false);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [isPromoBannerDismissed, setIsPromoBannerDismissed] = useState(false);
+  console.log('🏷️ setIsSearchMode:', isSearchMode);
+  console.log('🏷️ activeCategory:', activeCategory);
+  console.log('🏷️ isHeroHidden:', isHeroHidden);
 
   // API hooks
   const {
@@ -92,6 +99,7 @@ const HomePage: React.FC = () => {
 
   // Handle category change
   const handleCategoryChange = (category: string) => {
+    console.log('🔄 Category changed to:', category);
     setActiveCategory(category);
     setIsHeroHidden(category !== 'all' || isSearchMode);
 
@@ -298,11 +306,15 @@ const AppContent: React.FC = () => {
           <Route path='/product/:id' element={<ProductDetail />} />
           <Route path='/combo/:id' element={<ComboDetail />} />
           <Route path='/checkout' element={<CheckoutPage />} />
+
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/otp' element={<OtpPage />} />
         </Routes>
       </div>
       <Footer />
       <BottomNavigation />
       <CartModal />
+      <WhatsAppWidget />
     </div>
   );
 };
